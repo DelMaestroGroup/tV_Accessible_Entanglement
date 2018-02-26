@@ -3,7 +3,7 @@ Calculate both the spatial and the operational entanglement entropies of a
 region A, using the SVD. The latter is the "entanglement of particles"
 introduced by Wiseman and Vaccaro in 2003.
 """
-function spatial_entropy(basis::AbstractSzbasis, A, d::Vector{Float64}, MaxOccupation::Int)
+function spatial_entropy(basis::AbstractSzbasis, A, d::Vector{Float64}, MaxOccupation::Int,alpha::Float64)
     B = setdiff(1:basis.K, A)
     # Matrices to SVD
     Amatrices = []
@@ -63,7 +63,8 @@ function spatial_entropy(basis::AbstractSzbasis, A, d::Vector{Float64}, MaxOccup
         warn("RDM eigenvalue error ", err_sp)
     end
 
-    S2_sp = -log(sum(S_sp.^4))
+    Sa_sp = (1/(1-alpha))*log(sum(S_sp.^(2*alpha)))   #Actually S_alpha
+    Sa_Pn = (1/(1-alpha))*log(sum(norms.^(alpha)))  #Renyi entropies of the probabilities
     S1_sp=0
     for k=1:length(S_sp)
         if S_sp[k]^2>0
@@ -79,8 +80,8 @@ function spatial_entropy(basis::AbstractSzbasis, A, d::Vector{Float64}, MaxOccup
         warn("RDM eigenvalue error_OP ", maximum(errs_op))
     end
 
-    S2s_op = [-log(sum(S.^4)) for S in Ss_op]
-    S2_op = dot(norms, S2s_op)
+    Sas_op = [(1/(1-alpha))*log(sum(S.^(2*alpha))) for S in Ss_op]
+    Sa_op = dot(norms, Sas_op)
     S1s_op = [0.0 for S in Ss_op]
     for (i, S) in enumerate(Ss_op)
        for k=1:length(S)
@@ -97,8 +98,39 @@ function spatial_entropy(basis::AbstractSzbasis, A, d::Vector{Float64}, MaxOccup
        N2+=(i-1+ Index_Shift)^2*norms[i]
     end
     Sigma2_n=N2-N1^2
-    S1_sp, S1_op, S2_sp, S2_op,Sigma2_n
+
+
+    Pntoa=norms
+    Pntoa =norms.^alpha
+    Pna = [sum(S.^(2*alpha)) for S in Ss_op]
+    Pna = Pna.*Pntoa
+    Pna=Pna/sum(Pna)
+    Pntoa=Pntoa/sum(Pntoa)
+
+############
+
+#Write Probabilities to file by uncommenting. NOTE: Should activate this
+#via command line instead.
+
+#Parameters (Note: Should make this retrievable from command line later on)
+#N = length(Pntoa)-1 	           #Number of particles
+#M = N*2             		   #Number of sites, Note: Using half-filling
+#V = -1.5                           #Interaction strength
+#open("M$(M)F$(N)VNEG$(@sprintf("%.1f",V))Probs.dat", "w") do f
+#	   write(f,"# n   P_(n)^(alpha)            P_(n,alpha) \n")
+#           for n in 1:length(Pntoa)
+#              write(f, "  $(@sprintf("%-3s",n-1)) $(@sprintf("%-24s",Pntoa[n])) $(@sprintf("%-24s",Pna[n])) \n")
+#           end
+#       end
+
+############
+
+    Sas_op5 = exp((1-alpha)/alpha*Sas_op)
+    Sa_op5 = alpha/(1-alpha)*log(dot(norms, Sas_op5))
+    S1_sp, S1_op, Sa_sp, Sa_op,Sigma2_n, Sa_Pn, Sa_op5
+
+
 
 
 end
-spatial_entropy(basis::AbstractSzbasis, Asize::Int, d::Vector{Float64}, MaxOccupation::Int) = spatial_entropy(basis, 1:Asize, d, MaxOccupation)
+spatial_entropy(basis::AbstractSzbasis, Asize::Int, d::Vector{Float64}, MaxOccupation::Int, alpha::Float64) = spatial_entropy(basis, 1:Asize, d, MaxOccupation, alpha)
