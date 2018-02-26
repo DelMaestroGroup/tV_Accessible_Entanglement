@@ -327,7 +327,7 @@ open(output, "w") do f
     for U in U_range
 
         # Create the Hamiltonian
-        H = sparse_hamiltonian(basis, c[:t], U, boundary=boundary)
+        H = sparse_hamiltonian(basis, c[:t], -U, boundary=boundary)
 #	print(" sparse_hamiltonian finish\n ")
 
         # Perform the Lanczos diagonalization to obtain the lowest eigenvector
@@ -339,7 +339,7 @@ open(output, "w") do f
         s1_spatial, s1_operational, s2_spatial, s2_operational, Sigma2_n, Sa_Pn, Sa_op5 = spatial_entropy(basis, Asize, wf, site_max,alpha)
 
 #        write(f, "$(U/c[:t]) $(d[1][1]/c[:t]) $(s1_spatial) $(s1_operational) $(s2_spatial) $(s2_operational)  $(Sigma2_n)  $(Sa_Pn) $(Sa_op5) \n")
-        write(f, "  $(@sprintf("%-20s",U/c[:t])) $(@sprintf("%-19s",d[1][1]/c[:t])) $(@sprintf("%-19s",s1_spatial)) $(@sprintf("%-19s",s1_operational)) $(@sprintf("%-19s",s2_spatial)) $(@sprintf("%-19s",s2_operational)) $(@sprintf("%-19s",Sigma2_n)) $(@sprintf("%-19s",Sa_Pn)) $(@sprintf("%-19s",Sa_op5)) \n")
+        write(f, "  $(@sprintf("%-20s",-U/c[:t])) $(@sprintf("%-19s",d[1][1]/c[:t])) $(@sprintf("%-19s",s1_spatial)) $(@sprintf("%-19s",s1_operational)) $(@sprintf("%-19s",s2_spatial)) $(@sprintf("%-19s",s2_operational)) $(@sprintf("%-19s",Sigma2_n)) $(@sprintf("%-19s",Sa_Pn)) $(@sprintf("%-19s",Sa_op5)) \n")
 
         flush(f)
 

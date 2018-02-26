@@ -1,0 +1,5 @@
+#PBS -l nodes=1:ppn=1,pmem=100gb,pvmem=110gb
+#PBS -l walltime=29:55:00
+
+cd ~/tV_diagonalize
+python script.py
