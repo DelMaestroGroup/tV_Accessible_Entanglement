@@ -117,10 +117,17 @@ add_arg_group(s, "BH parameters")
         arg_type = Int
         default = -1
     "--alpha"
-	metavar = "alpha"
-	help = "Renyi Index"
-	arg_type = Float64
-	default = 2.0
+        metavar = "alpha"
+        help = "Renyi Index"
+        arg_type = Float64
+        default = 2.0
+    "--probs"
+        help = "Generate file with probability distribution respect to subsystem size"
+        action = :store_true
+    "--neg"
+        help = "Do run for negative of the specified U range"
+        action = :store_true
+
 end 
 
 add_arg_group(s, "entanglement entropy")
@@ -325,10 +332,16 @@ open(output, "w") do f
            # wf=Vz
 
     for U in U_range
-
+        
+        if c[:neg]
+        # Create the Hamiltonian
+        H = sparse_hamiltonian(basis, c[:t], -U, boundary=boundary)
+        
+        else
         # Create the Hamiltonian
         H = sparse_hamiltonian(basis, c[:t], U, boundary=boundary)
-#	print(" sparse_hamiltonian finish\n ")
+        
+        end
 
         # Perform the Lanczos diagonalization to obtain the lowest eigenvector
         # http://docs.julialang.org/en/release-0.3/stdlib/linalg/?highlight=lanczos
@@ -336,13 +349,25 @@ open(output, "w") do f
         wf = vec(d[2][1:ll])
 
         # Calculate the second Renyi entropy
-        s1_spatial, s1_operational, s2_spatial, s2_operational, Sigma2_n, Sa_Pn, Sa_op5 = spatial_entropy(basis, Asize, wf, site_max,alpha)
+        if c[:probs]
+            
+        s1_spatial, s1_operational, s2_spatial, s2_operational, Sigma2_n, Sa_Pn, Sa_op5 = spatial_entropy_probs(basis, Asize, wf, site_max,alpha, U, M, N)
+            
+        else
+            s1_spatial, s1_operational, s2_spatial, s2_operational, Sigma2_n, Sa_Pn, Sa_op5 = spatial_entropy(basis, Asize, wf, site_max,alpha)
+        end
 
-#        write(f, "$(U/c[:t]) $(d[1][1]/c[:t]) $(s1_spatial) $(s1_operational) $(s2_spatial) $(s2_operational)  $(Sigma2_n)  $(Sa_Pn) $(Sa_op5) \n")
-        write(f, "  $(@sprintf("%-20s",U/c[:t])) $(@sprintf("%-19s",d[1][1]/c[:t])) $(@sprintf("%-19s",s1_spatial)) $(@sprintf("%-19s",s1_operational)) $(@sprintf("%-19s",s2_spatial)) $(@sprintf("%-19s",s2_operational)) $(@sprintf("%-19s",Sigma2_n)) $(@sprintf("%-19s",Sa_Pn)) $(@sprintf("%-19s",Sa_op5)) \n")
+        if c[:neg]
+        write(f, "  $(@sprintf("%-21s",-U/c[:t])) $(@sprintf("%-20s",d[1][1]/c[:t])) $(@sprintf("%-20s",s1_spatial)) $(@sprintf("%-20s",s1_operational)) $(@sprintf("%-20s",s2_spatial)) $(@sprintf("%-20s",s2_operational)) $(@sprintf("%-20s",Sigma2_n)) $(@sprintf("%-20s",Sa_Pn)) $(@sprintf("%-20s",Sa_op5)) \n")
+        
+        else
+        write(f, "  $(@sprintf("%-21s",U/c[:t])) $(@sprintf("%-20s",d[1][1]/c[:t])) $(@sprintf("%-20s",s1_spatial)) $(@sprintf("%-20s",s1_operational)) $(@sprintf("%-20s",s2_spatial)) $(@sprintf("%-20s",s2_operational)) $(@sprintf("%-20s",Sigma2_n)) $(@sprintf("%-20s",Sa_Pn)) $(@sprintf("%-20s",Sa_op5)) \n")  
+        
+        end
 
         flush(f)
 
+        ################
         if nnnbip== NNN
            s1_spatial, s1_operational, s2_spatial, s2_operational, Sigma2_n = spatial_entropyNNN(basis, Asize, wf, site_max)
            write(fNNN, "$(U/c[:t]) $(d[1][1]/c[:t]) $(s1_spatial) $(s1_operational) $(s2_spatial) $(s2_operational) $(Sigma2_n)\n")
