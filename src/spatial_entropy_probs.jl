@@ -53,6 +53,16 @@ function spatial_entropy_probs(basis::AbstractSzbasis, A, d::Vector{Float64}, Ma
     end
     Ss_raw = [svdvals!(Amatrix) for Amatrix in Amatrices]
 
+################################################################################
+
+    #Set the precision of bigfloat variables.
+    prec = 10000
+    setprecision(prec)
+
+    #Promote Ss_raw to bigfloat type variable via element-wise multiplication
+    Ss_raw = Ss_raw.*ones(BigFloat,size(Ss_raw))
+
+################################################################################
 
     # Spatial.
     S_sp = vcat(Ss_raw...)
@@ -99,14 +109,16 @@ function spatial_entropy_probs(basis::AbstractSzbasis, A, d::Vector{Float64}, Ma
     end
     Sigma2_n=N2-N1^2
 
+    #Promote norms, Ss_op and values that rely on them from Float64 to BigFloat
+    norms = norms.*ones(BigFloat,length(norms))
+    Ss_op = Ss_op.*ones(BigFloat, size(Ss_op))
 
     Pntoa=norms
     Pntoa =norms.^alpha
     Pna = [sum(S.^(2*alpha)) for S in Ss_op]
-    Pna = Pna.*Pntoa
+    Pna = (Pna.*Pntoa)
     Pna=Pna/sum(Pna)
     Pntoa=Pntoa/sum(Pntoa)
-
 
 ############
 
@@ -134,6 +146,44 @@ open("M$(M)F$(N)VNEG$(@sprintf("%.1f",U))a$(trunc(Int,alpha))Probs.dat", "w") do
            end
         end
     end
+
+############
+
+############
+
+#Luttinger Parameter
+k = pi/(2*acos(-U/2))
+Pna = Pna.^k
+Pna /= sum(Pna)
+
+print("Sum(Pna): ")
+println(sum(Pna))
+
+#Write Probabilities to file by uncommenting. NOTE: Should activate this
+#via command line instead.
+
+#Parameters (Note: Should make this retrievable from command line later on)
+    
+if U >= 0        #Use file naming scheme for NONNEGATIVE interaction strength
+open("M$(M)F$(N)V$(@sprintf("%.1f",U))a$(trunc(Int,alpha))Probs_toK.dat", "w") do f
+        write(f, "# M = $(M), N = $(N), V/t = $(U), K = $(k), alpha=$(trunc(Int,alpha)), BigFloatPrecision=$(prec) \n")
+        write(f,"# n   P_(n,alpha) \n")
+           for n in 1:length(Pntoa)
+              write(f, "  $(@sprintf("%-3s",n-1)) $(@sprintf("%-32s",Pna[n])) \n")
+           end
+        end
+else
+U = abs(U)        #Use file naming scheme for NEGATIVE interaction strength
+open("M$(M)F$(N)VNEG$(@sprintf("%.1f",U))a$(trunc(Int,alpha))Probs_toK.dat", "w") do f
+       U = -U
+       write(f, "# M = $(M), N = $(N), V/t = $(U), alpha=$(trunc(Int,alpha)), BigFloatPrecision=$(prec) \n")
+	   write(f,"# n   P_(n,alpha) \n")
+           for n in 1:length(Pntoa)
+              write(f, "  $(@sprintf("%-3s",n-1)) $(@sprintf("%-32s",Pna[n])) \n")
+           end
+        end
+    end
+
 ############
 
     Sas_op5 = exp((1-alpha)/alpha*Sas_op)
