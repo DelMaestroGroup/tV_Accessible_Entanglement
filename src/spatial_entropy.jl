@@ -125,7 +125,7 @@ function spatial_entropy(basis::AbstractSzbasis, A, d::Vector{Float64}, MaxOccup
 
 ############
 
-    Sas_op5 = exp((1-alpha)/alpha*Sas_op)
+    Sas_op5 = exp.((1-alpha)/alpha*Sas_op)
     Sa_op5 = alpha/(1-alpha)*log(dot(norms, Sas_op5))
     S1_sp, S1_op, Sa_sp, Sa_op,Sigma2_n, Sa_Pn, Sa_op5
 
