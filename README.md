@@ -1,4 +1,4 @@
-# tV_Operational_Entanglement
+# t-V Accessible Entanglement
 
 A Julia exact diagonalization code for the [tV model](https://en.wikipedia.org/wiki/Bose%E2%80%93Hubbard_model) with a focus on operational entanglement entropy under a spatial bipartition [Wiseman & Vaccaro, 2003](https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.91.097902) & [Barghathi et al., 2018](https://arxiv.org/pdf/1804.01114.pdf). 
 
@@ -23,6 +23,6 @@ See also [Zhang et al., 2011](http://arxiv.org/pdf/1102.4006v1.pdf).
 * `julia tV_main.jl --out output.dat --ee 1 --site-max 1 4 2`
 * `julia tV_main.jl --out output.dat --pbc --u-log --u-min 2 --u-max 2 --u-num 1 --ee 1 --site-max 1 --u-num 1 --probs 4 2`
 
-The code can also be ran via the attached [Python script](https://github.com/DelMaestroGroup/tV_Operational_Entanglement/blob/master/script.py). This will be convenient when runs for various different system sizes (i.e number of particles or lattice sites) are desired. To run the code this way, modify the command line arguments appropriately in the script, then copy paste the following in the command line:
+The code can also be run via the attached [Python script](https://github.com/DelMaestroGroup/tV_Operational_Entanglement/blob/master/script.py). This will be convenient when runs for various different system sizes (i.e number of particles or lattice sites) are desired. To run the code this way, modify the command line arguments appropriately in the script, then copy paste the following in the command line:
 
 * `python script.py`
